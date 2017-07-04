@@ -2,7 +2,9 @@
 正方教务系统爬虫
 ======
 
-## QuickStart
+系统采用node开发，使用了 egg + cheerio
+
+### QuickStart
 ```shell
 $ npm install
 $ npm start
