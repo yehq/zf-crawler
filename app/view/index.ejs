@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>zust 校外访问</h1>
+    <hr>
+    <form id="offCampusAuthenticationForm" action="/zf/offCampusAuthentication" method="POST">
+        <table>
+            <tr></tr>
+            <tr>
+                <th>
+                    账号:
+                </th>
+                <td>
+                    <input type="text" name="username" value="1140299340">
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    密码:
+                </th>
+                <td>
+                    <input type="password" name="password" value="134011">
+                </td>
+            </tr>
+            <tr>
+                <th></th>
+                <td><a id="offCampusAuthentication" href="javascript:;">login</a></td>
+            </tr>
+        </table>        
+    </form>
+
+    <h1>zf 教务系统登录</h1>
+    <hr>
+    <form id="login" action="/zf/login" method="POST">
+        <table>
+            <tr>
+                <th>
+                    账号:
+                </th>
+                <td>
+                    <input type="text" id="username" name="username" value="1140299340">
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    密码:
+                </th>
+                <td>
+                    <input type="password" id="password" name="password" value="331081199602134011">
+                </td>
+            </tr>
+        </table>        
+    </form>
+    <div>
+        <img id="checkCode" src="" alt="暂无验证码">
+        <input id="checkCodeInput" type="text">
+        <button id="btn-login">教务系统登录</button>
+    </div>
+
+    <button id="btn-main">主页</button>
+    <button id="btn-timetable">学生个人课表</button>
+    <button id="btn-grade">成绩查询</button>
+    <button id="btn-personal">个人信息</button>
+    <button id="btn-exam">学生考试查询</button>
+    <button id="btn-course-selection">学生选课情况查询</button>
+    <button id="btn-rank-exam">学生等级考试查询</button>
+    <div id="responseData">
+    </div>
+
+
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        $(function() {
+            var $form = $('#offCampusAuthenticationForm');
+            var $offCampusAuthentication = $('#offCampusAuthentication');
+            var $btnLogin = $('#btn-login');
+            var $checkCode = $('#checkCode');
+            var $checkCodeInput = $('#checkCodeInput');
+            var $responseData = $('#responseData');
+            var $timetable = $('#btn-timetable');
+            var $username = $('#username');
+            var $password = $('#password');
+
+            var fetchCheckCode = function() {
+                $.get('/zf/check_code', {}, function(data) {
+                    $checkCode.attr('src', data.check_code_url);
+                })
+            }
+            $offCampusAuthentication.on('click', function() {
+                $.ajax({
+                    url: "/zf/off_campus_authentication",
+                    type: 'POST',
+                    data: $form.serialize(),
+                }).done(function(data) {
+                    fetchCheckCode();
+                }).fail(function(err) {
+                    console.log(err)
+                })
+            })
+
+            $checkCode.on('click', function() {
+                fetchCheckCode();
+            })
+
+            $btnLogin.on('click', function() {
+                $.ajax({
+                    url: "/zf/login",
+                    type: 'POST',
+                    data: {
+                        username: $username.val(),
+                        password: $password.val(),
+                        checkCode: $checkCodeInput.val(),
+                    },
+                }).done(function(data) {
+                    $responseData.html(data)
+                }).fail(function(err) {
+                    console.log(err)
+                })
+            })
+            
+
+            var fetchData = function(selector, url, cb) {
+                $(selector).on('click', function() {
+                    $.ajax({
+                        url,
+                        type: 'GET',
+                    }).done(function(data) {
+                        $responseData.html(data);
+                        if (cb && 'function' === typeof cb) cb(data);
+                    }).fail(function(err) {
+                        console.log(err)
+                    })
+                })
+            }
+
+            fetchData('#btn-timetable', '/zf/timetable', function(data) {
+                $responseData.html(JSON.stringify(data.timetable, null, 2))
+            });
+            fetchData('#btn-main', '/zf/main');
+            fetchData('#btn-personal', '/zf/personal', function(data) {
+                $responseData.html(JSON.stringify(data.personal, null, 2))
+            });
+            fetchData('#btn-exam', '/zf/exam', function(data) {
+                $responseData.html(JSON.stringify(data.exams, null, 2))
+            });
+            fetchData('#btn-course-selection', '/zf/course_selection', function(data) {
+                $responseData.html(JSON.stringify(data.course_selections, null, 2))
+            });
+            fetchData('#btn-rank-exam', '/zf/rank_exam', function(data) {
+                $responseData.html(JSON.stringify(data.rank_exams, null, 2))
+            });
+            fetchData('#btn-grade', '/zf/grade', function(data) {
+                var grades = data.grades;
+                var html = `<table>`;
+                html += `
+                    <tr>
+                        <th>学年</th>
+                        <th>学期</th>
+                        <th>课程代码</th>
+                        <th>课程名称</th>
+                        <th>课程性质</th>
+                        <th>课程归属</th>
+                        <th>学分</th>
+                        <th>绩点</th>
+                        <th>成绩</th>
+                        <th>辅修标记</th>
+                        <th>补考成绩</th>
+                        <th>重修成绩</th>
+                        <th>学院名称</th>
+                        <th>重修标记</th>
+                    </tr>`;
+                grades.forEach(item => {
+                    html += `
+                        <tr>
+                            <td>${item.year}</td>
+                            <td>${item.term}</td>
+                            <td>${item.code}</td>
+                            <td>${item.name}</td>
+                            <td>${item.nature}</td>
+                            <td>${item.ascription}</td>
+                            <td>${item.credit}</td>
+                            <td>${item.grade_point}</td>
+                            <td>${item.score}</td>
+                            <td>${item.minor_mark}</td>
+                            <td>${item.makeup_grade || ''}</td>
+                            <td>${item.retake_grade || ''}</td>
+                            <td>${item.college_name}</td>
+                            <td>${item.rebuild_mark}</td>
+                        </tr>`
+                })
+                html += `</table>`
+                $responseData.html(html);
+            });
+        })
+    </script>
+</body>
+</html>
