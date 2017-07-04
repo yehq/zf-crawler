@@ -90,8 +90,16 @@
             var $password = $('#password');
 
             var fetchCheckCode = function() {
-                $.get('/zf/check_code', {}, function(data) {
+                $.ajax({
+                    url: '/zf/check_code',
+                    type: 'GET',
+                    data: $form.serialize(),
+                    dataType: 'json'
+                }).done(function(data) {
                     $checkCode.attr('src', data.check_code_url);
+                }).fail(function(err) {
+                    const result = err.responseJSON;
+                    alert(result.error.message);
                 })
             }
             $offCampusAuthentication.on('click', function() {
@@ -102,7 +110,8 @@
                 }).done(function(data) {
                     fetchCheckCode();
                 }).fail(function(err) {
-                    console.log(err)
+                    const result = err.responseJSON;
+                    alert(result.error.message);
                 })
             })
 
@@ -117,12 +126,13 @@
                     data: {
                         username: $username.val(),
                         password: $password.val(),
-                        checkCode: $checkCodeInput.val(),
+                        check_code: $checkCodeInput.val(),
                     },
                 }).done(function(data) {
                     $responseData.html(data)
                 }).fail(function(err) {
-                    console.log(err)
+                    const result = err.responseJSON;
+                    alert(result.error.message);
                 })
             })
             
@@ -136,7 +146,8 @@
                         $responseData.html(data);
                         if (cb && 'function' === typeof cb) cb(data);
                     }).fail(function(err) {
-                        console.log(err)
+                        const result = err.responseJSON;
+                        alert(result.error.message);
                     })
                 })
             }

@@ -59,8 +59,10 @@ module.exports = app => {
             if (resp.status == 200) {
                 const cookie = resp.headers['set-cookie'][0];
                 sessionId = cookie.split(';')[0].split('=')[1];
+            } else if (resp.status === 302 || resp.status === 403) {
+                ctx.throw(403, '请先进行校外访问登录！');
             } else {
-                ctx.throw(415, '教务系统登录失败');
+                ctx.throw(resp.status, '教务系统登录失败');
             }
 
             const $ = cheerio.load(resp.data.toString());
@@ -104,22 +106,30 @@ module.exports = app => {
             }
             if (!password) password = ctx.session.password;
             const { root_url, action, login_params } = app.config.zf;
-            let data;
+            let resp;
             try {
-                data = await this._post(`${root_url}/${action.login}`, {
-                    [login_params.viewstate]: viewstate,
-                    [login_params.username]: username,
-                    [login_params.password]: password,
-                    [login_params.check_code]: checkCode,
-                    [login_params.login_type]: '学生',
-                    Button1: '',
-                    lbLanguage: '',
+                resp = await app.curl(`${root_url}/${action.login}`, {
+                    method: 'POST',
+                    headers: {
+                        Cookie: `ASP.NET_SessionId=${sessionId}; ezproxy=${ezproxy}`
+                    },
+                    data: {
+                        [login_params.viewstate]: viewstate,
+                        [login_params.username]: username,
+                        [login_params.password]: password,
+                        [login_params.check_code]: checkCode,
+                        [login_params.login_type]: '学生',
+                        Button1: '',
+                        lbLanguage: '',
+                    }
                 });
             } catch (e) {
-                console.log(e, 'timeout error')
-                return 'timeout';
+                ctx.throw(resp.status, '教务系统登录失败，可能是请求超时，请重新登录！');
             }
-            return data;
+            if (resp.status !== 302) {
+                ctx.throw(resp.status, '教务系统登录失败！');
+            }
+            return resp.data.toString();
         }
 
         /**
@@ -292,7 +302,6 @@ module.exports = app => {
                         text: $td.text().trim(),
                         rowspan: $td.attr('rowspan'),
                     }); 
-                    console.log($td.text());
                 })
                 list.push(courses)
             })
@@ -327,6 +336,14 @@ module.exports = app => {
                     resData = resp.data.toString();
                 }
                 
+            }
+
+            if (resp.status !== 200) {
+                if (resp.status === 302 || resp.status === 403) {
+                    ctx.throw(403, '请重新登录！');
+                } else {
+                    ctx.throw(resp.status, '获取数据出错');
+                }
             }
             return resData;
         }
