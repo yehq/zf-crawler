@@ -18,10 +18,12 @@ $ open http://localhost:7002
 
 ### api
 ```
-GET  /                               测试接口的页面
+1. 测试接口的页面
+GET  /                               
 ```
 ```
-POST /zf/off_campus_authentication   校外访问登录接口
+2. 校外访问登录接口
+POST /zf/off_campus_authentication   
 requestBody                  
 {
   "username": "",
@@ -31,7 +33,8 @@ requestBody
 note: 没有校外访问可以跳过
 ```
 ```
-GET  /zf/check_code                  获得教务系统登录的验证码
+3. 获得教务系统登录的验证码
+GET  /zf/check_code                  
 responseBody 
 {
   "check_code_url": ""
@@ -39,7 +42,8 @@ responseBody
 note: 在教务系统登录之前需要先获取验证码，需要校外访问的必须在校外访问成功了才能获取
 ```
 ```
-POST /zf/login                       教务系统登录的接口
+4.教务系统登录的接口
+POST /zf/login                       
 requestBody
 {
   "username": "",
@@ -50,10 +54,12 @@ note: 要手动填写验证码
 ```
 
 ```
-GET  /zf/main                        主页的html代码
+5. 主页的html代码
+GET  /zf/main                        
 ```
 ```
-GET  /zf/timetable                   课表
+6. 课表
+GET  /zf/timetable                   
 responseBody
 {
   "timetable": [
@@ -64,35 +70,40 @@ responseBody
 }
 ```
 ```
-GET  /zf/grade                       成绩
+6. 成绩
+GET  /zf/grade                       
 responseBody
 {
   "grades": []
 }
 ```
 ```
-GET  /zf/personal                    个人信息
+7. 个人信息
+GET  /zf/personal                    
 responseBody
 {
   "personal": []
 }
 ```
 ```
-GET  /zf/exam                        考试安排
+8. 考试安排
+GET  /zf/exam                        
 responseBody
 {
   "exams": []
 }
 ```
 ```
-GET  /zf/course_selection            选课
+9. 选课
+GET  /zf/course_selection            
 responseBody
 {
   "course_selections": []
 }
 ```
 ```
-GET  /zf/rank_exam                   等级考试安排
+10. 等级考试安排
+GET  /zf/rank_exam                   
 responseBody
 {
   "rank_exams": []
