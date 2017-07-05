@@ -107,7 +107,10 @@ module.exports = appInfo => {
         reading_score: '阅读成绩',
         writing_score: '写作成绩',
         comprehensive_score: '综合成绩',
-      }
+      },
+
+      check_code_clear_interval: 3 * 60 * 1000,  //默认3分钟清理一次验证码
+      check_code_save_dir: `${appInfo.baseDir}\\app\\public\\img\\checkCode`, //验证码保存路径
     }
   };
 

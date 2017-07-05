@@ -129,7 +129,7 @@
                         check_code: $checkCodeInput.val(),
                     },
                 }).done(function(data) {
-                    $responseData.html(data)
+                    alert('登录成功！！');
                 }).fail(function(err) {
                     const result = err.responseJSON;
                     alert(result.error.message);

@@ -78,18 +78,19 @@ module.exports = app => {
          * ASP.NET_SessionId
          */
         async fetchCheckCodeImg() {
-            const { root_url, action } = app.config.zf;
+            const { root_url, action, check_code_clear_interval, check_code_save_dir } = app.config.zf;
             const { ctx } = this;
-            const { sessionId, ezproxy } = ctx.session;
-            const codeUrl = path.resolve('app/public/img/checkCode/checkCode.jpg');
+            const { sessionId, ezproxy, username } = ctx.session;
+            const checkCodeImgName = `${sessionId}-${Date.now() + check_code_clear_interval}.jpg`;
+            const checkCodePath = `${check_code_save_dir}/${checkCodeImgName}`;
             const resp = await app.curl(`${root_url}/${action.check_code}`, {
                 method: 'GET',
                 headers: {
                     Cookie: `ASP.NET_SessionId=${sessionId}; ezproxy=${ezproxy}`
                 }
             });
-            fs.writeFileSync(codeUrl, resp.data);
-            return '/public/img/checkCode/checkCode.jpg';
+            fs.writeFileSync(checkCodePath, resp.data);
+            return checkCodePath.substring(checkCodePath.indexOf('\\public'));
         }
 
         /**
@@ -308,13 +309,31 @@ module.exports = app => {
         }
 
         /**
+         * 清理过期的验证码图片
+         */
+        removeExpiredCheckCode() {
+            const { check_code_save_dir } = app.config.zf; 
+            const filenames = fs.readdirSync(check_code_save_dir);
+            filenames.forEach(filename => {
+                let time = '';
+                if (filename.split('-').length > 1) {
+                    time = filename.split('-')[1].split('.')[0];
+                } else {
+                    return true;
+                }
+                if (time < Date.now()) {
+                    const f = fs.unlinkSync(`${check_code_save_dir}/${filename}`);
+                }
+            })
+        }
+
+        /**
          * get 请求抓取页面
          * @param {String} url 
          * @param {Object} data 
          * @param {String} method 
          */
         async _get(url, data = {}, method = 'GET') {
-            console.log(url)
             const { ctx } = this;
             const { ezproxy, sessionId } = ctx.session;
             const { root_url, action, contentType } = app.config.zf; 
@@ -342,7 +361,6 @@ module.exports = app => {
             } else {
                 resData = resp.data.toString();
             }
-            console.log(resData);
             if (resp.status !== 200) {
                 if (resp.status === 302 || resp.status === 403) {
                     ctx.throw(403, '请重新登录！');
