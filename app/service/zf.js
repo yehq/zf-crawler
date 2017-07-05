@@ -129,7 +129,6 @@ module.exports = app => {
             if (resp.status !== 302) {
                 ctx.throw(resp.status, '教务系统登录失败！');
             }
-            return resp.data.toString();
         }
 
         /**
@@ -315,29 +314,35 @@ module.exports = app => {
          * @param {String} method 
          */
         async _get(url, data = {}, method = 'GET') {
+            console.log(url)
             const { ctx } = this;
             const { ezproxy, sessionId } = ctx.session;
             const { root_url, action, contentType } = app.config.zf; 
             let resData;
-            const resp = await app.curl(url, {
+            const resp = await app.curl(encodeURI(url), {
                 method,
                 data,
                 headers: {
                     Cookie: `${sessionId ? `ASP.NET_SessionId=${sessionId};` : ''}${ezproxy ? `ezproxy=${ezproxy};` : ''}`,
                     'Content-Type': 'application/x-www-form-urlencoded;',
-                    Referer: `${root_url}/${action.login}`
+                    Referer: `${root_url}`,
                 }
             });
             if (resp.headers['content-type']) {
-                const charset = resp.headers['content-type'].split('; ')[1].split('=')[1];
-                if (charset === 'gb2312') {
+                let charset = '';
+                if (resp.headers['content-type'].split('; ').length > 1) {
+                    charset = resp.headers['content-type'].split('; ')[1].split('=')[1];
+                }
+                
+                if (charset.toLowerCase() === 'gb2312') {
                     resData = iconv.decode(resp.data,'GB2312').toString();
                 } else {
                     resData = resp.data.toString();
                 }
-                
+            } else {
+                resData = resp.data.toString();
             }
-
+            console.log(resData);
             if (resp.status !== 200) {
                 if (resp.status === 302 || resp.status === 403) {
                     ctx.throw(403, '请重新登录！');

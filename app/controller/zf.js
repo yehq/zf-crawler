@@ -29,9 +29,9 @@ module.exports = app => {
     async login() {
       const { ctx, service } = this;
       const { check_code, username, password } = ctx.request.body;
-      const result = await service.zf.login(check_code, username, password);
+      await service.zf.login(check_code, username, password);
       await service.zf.getMain();
-      ctx.body = result;
+      ctx.body = {};
     }
 
     async timetable() {
