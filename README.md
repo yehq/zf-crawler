@@ -214,6 +214,9 @@ zf: {
         writing_score: '写作成绩',
         comprehensive_score: '综合成绩',
       }
+      
+      check_code_clear_interval: 2 * 60 * 1000,  //默认验证码图片的过期删除时间为2分钟
+      check_code_save_dir: `${appInfo.baseDir}\\app\\public\\img\\checkCode`, //验证码保存路径
     }
   };
 ```
