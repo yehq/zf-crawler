@@ -8,14 +8,14 @@
 ```shell
 $ npm install
 $ npm start
-$ open http://localhost:7002
+$ open http://localhost:7001
 ```
 
 ### Development
 ```shell
 $ npm install
 $ npm run dev
-$ open http://localhost:7002
+$ open http://localhost:7001
 ```
 
 ### 试用范围
