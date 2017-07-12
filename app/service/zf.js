@@ -82,7 +82,7 @@ module.exports = app => {
             const { ctx } = this;
             const { sessionId, ezproxy, username } = ctx.session;
             const checkCodeImgName = `${sessionId}-${Date.now() + check_code_clear_interval}.jpg`;
-            const checkCodePath = `${check_code_save_dir}\\${checkCodeImgName}`;
+            const checkCodePath = `${check_code_save_dir}\\${checkCodeImgName}`.replace(/\\/g, '/');
             const resp = await app.curl(`${root_url}/${action.check_code}`, {
                 method: 'GET',
                 headers: {
@@ -90,7 +90,7 @@ module.exports = app => {
                 }
             });
             fs.writeFileSync(checkCodePath, resp.data);
-            return checkCodePath.substring(checkCodePath.indexOf('\\public'));
+            return checkCodePath.substring(checkCodePath.indexOf('/public'));
         }
 
         /**
