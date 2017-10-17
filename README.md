@@ -25,32 +25,34 @@ $ open http://localhost:7001
 note: 通过修改配置文件理论上可以适配大部分正方教务系统系统，但没有测试过不敢保证！！！
 
 ### api
-```
 1. 测试接口的页面
+```
 GET  /                               
 ```
-```
+
 2. 校外访问登录接口
+```
 POST /zf/off_campus_authentication   
 requestBody                  
 {
   "username": "",
   "password": ""
 }
-
+```
 note: 没有校外访问可以跳过
-```
-```
+
 3. 获得教务系统登录的验证码
+``` 
 GET  /zf/check_code                  
 responseBody 
 {
   "check_code_url": ""
 }
+```
 note: 在教务系统登录之前需要先获取验证码，需要校外访问的必须在校外访问成功了才能获取
-```
-```
+
 4.教务系统登录的接口
+```
 POST /zf/login                       
 requestBody
 {
@@ -58,16 +60,25 @@ requestBody
   "password": "",
   "check_code": ""
 }
+```
 note: 要手动填写验证码
-```
 
-```
+
 5. 主页的html代码
+```
 GET  /zf/main                        
 ```
-```
 6. 课表
-GET  /zf/timetable                   
+```
+GET  /zf/timetable     
+```
+| params   | xnd     | xqd   |  
+| :--------: | :-------: | :-----: |
+|   类型   | string     |  number or string  |
+|   描述   | 学年       |  学期  |
+|  example | 2017-2018  |   1   |
+
+```
 responseBody
 {
   "timetable": [
@@ -77,40 +88,66 @@ responseBody
   ]
 }
 ```
-```
+
 6. 成绩
-GET  /zf/grade                       
+```
+GET  /zf/grade 
+```
+| params   | ddlXN     | ddlXQ   |  
+| :--------: | :-------: | :-----: |
+|   类型   | string     |  number or string  |
+|   描述   | 学年       |  学期  |
+|  example | 2017-2018  |   1   |
+```
 responseBody
 {
   "grades": []
 }
 ```
-```
+
 7. 个人信息
+```
 GET  /zf/personal                    
 responseBody
 {
   "personal": []
 }
 ```
-```
+
 8. 考试安排
-GET  /zf/exam                        
+```
+GET  /zf/exam     
+```
+| params   | xnd     | xqd   |  
+| :--------: | :-------: | :-----: |
+|   类型   | string     |  number or string  |
+|   描述   | 学年       |  学期  |
+|  example | 2017-2018  |   1   |
+```
 responseBody
 {
   "exams": []
 }
 ```
-```
+
 9. 选课
-GET  /zf/course_selection            
+```
+GET  /zf/course_selection    
+```
+| params   | ddlXN     | ddlXQ   |  
+| :--------: | :-------: | :-----: |
+|   类型   | string     |  number or string  |
+|   描述   | 学年       |  学期  |
+|  example | 2017-2018  |   1   |
+```
 responseBody
 {
   "course_selections": []
 }
 ```
-```
+
 10. 等级考试安排
+```
 GET  /zf/rank_exam                   
 responseBody
 {
