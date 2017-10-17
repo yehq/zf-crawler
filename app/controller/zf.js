@@ -34,9 +34,15 @@ module.exports = app => {
       ctx.body = {};
     }
 
+    // xnd 学年 example：2017-2018
+    // xqd 学期 example: 1
     async timetable() {
       const { ctx, service } = this;
-      const timetable = await service.zf.getTimetable();
+      const { xnd, xqd } = ctx.query;
+      const timetable = await service.zf.getTimetable({
+        xnd,
+        xqd
+      });
       ctx.body = {
         timetable
       };
@@ -48,9 +54,15 @@ module.exports = app => {
       ctx.body = result;
     }
 
+    // ddlXN 学年 example：2017-2018
+    // ddlXQ 学期 example：1
     async grade() {
       const { ctx, service } = this;
-      const grades = await service.zf.getGrade();
+      const { ddlXN, ddlXQ } = ctx.query;
+      const grades = await service.zf.getGrade({
+        ddlXN,
+        ddlXQ
+      });
       ctx.body = {
         grades
       };
@@ -64,17 +76,29 @@ module.exports = app => {
       };
     }
 
+    // xnd 学年 example：2017-2018
+    // xqd 学期 example: 1
     async exam() {
       const { ctx, service } = this;
-      const exams = await service.zf.getExam();
+      const { xnd, xqd } = ctx.query;
+      const exams = await service.zf.getExam({
+        xnd,
+        xqd
+      });
       ctx.body = {
         exams
       };
     }
 
+    // ddlXN 学年 example：2017-2018
+    // ddlXQ 学期 example：1
     async courseSelection() {
       const { ctx, service } = this;
-      const courseSelections = await service.zf.getCourseSelection();
+      const { ddlXN, ddlXQ } = ctx.query;
+      const courseSelections = await service.zf.getCourseSelection({
+        ddlXN,
+        ddlXQ
+      });
       ctx.body = {
         course_selections: courseSelections
       };

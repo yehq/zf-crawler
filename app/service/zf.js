@@ -34,7 +34,7 @@ module.exports = app => {
                 },
                 rejectUnauthorized: false,
             });
-            
+
             if (resp.status == 302) {
                 const cookie = resp.headers['set-cookie'][0];
                 ezproxy = cookie.split(';')[0].split('=')[1];
@@ -164,11 +164,17 @@ module.exports = app => {
         /**
          * 获得课表
          */
-        async getTimetable() {
+        async getTimetable({ xnd, xqd }) {
             const { root_url } = app.config.zf;
             const { ctx } = this;
             const { actions } = ctx.session;
-            const html = await this._get(`${root_url}/${actions['学生个人课表']}`);
+
+            const timetable_url = `${root_url}/${actions['学生个人课表']}`;
+            const html = await this._getWithViewState(timetable_url, {
+                __EVENTTARGET: 'xnd',
+                xnd,
+                xqd,
+            })
             const timetable = this.handleTimetable(html);
             return timetable;
         }
@@ -176,37 +182,36 @@ module.exports = app => {
         /**
          * 获得考试安排
          */
-        async getExam() {
+        async getExam({ xnd, xqd }) {
             const { root_url, exam_column_map } = app.config.zf;
             const { ctx } = this;
             const { actions } = ctx.session;
-            const html = await this._get(`${root_url}/${actions['学生考试查询']}`);
+            const html = await this._getWithViewState(`${root_url}/${actions['学生考试查询']}`, {
+                __EVENTTARGET: 'xnd',
+                xnd,
+                xqd,
+            })
             const exams = this.handleCommonTable(html, exam_column_map, '#Datagrid1,#DataGrid1');
             return exams;
         }
 
-    
+
         /**
          * 获得在校成绩
          * Button1: '按学期查询'  Button5: '按学年查询'
          * ddlXN:2016-2017  (学年) ddlXQ:2  (学期)
          * gnmkdm: 'N121616',
          */
-        async getGrade() {
+        async getGrade({ ddlXN, ddlXQ }) {
             const { root_url, grade_column_map } = app.config.zf;
             const { ctx } = this;
             const { actions } = ctx.session;
             const grade_url = `${root_url}/${actions['成绩查询']}`;
-            const main = await this._get(grade_url);
-
-            const $ = cheerio.load(main);
-            const __VIEWSTATEGENERATOR = $("input[name='__VIEWSTATEGENERATOR']").val();
-            const __VIEWSTATE = $("input[name='__VIEWSTATE']").val();
-            const html = await this._post(grade_url, {
+            const html = await this._getWithViewState(grade_url, {
                 Button1: '按学期查询',
-                __VIEWSTATE,
-                __VIEWSTATEGENERATOR,
-            });
+                ddlXN,
+                ddlXQ,
+            })
             const grades = this.handleCommonTable(html, grade_column_map, '#Datagrid1,#DataGrid1');
             return grades;
         }
@@ -214,12 +219,16 @@ module.exports = app => {
         /**
          * 获得课程选择情况
          */
-        async getCourseSelection() {
+        async getCourseSelection({ ddlXN, ddlXQ }) {
             const { root_url, course_selection_column_map } = app.config.zf;
             const { ctx } = this;
             const { actions } = ctx.session;
             const course_selection_url = `${root_url}/${actions['学生选课情况查询']}`;
-            const html = await this._get(course_selection_url);
+            const html = await this._getWithViewState(course_selection_url, {
+                __EVENTTARGET: 'ddlXN',
+                ddlXN,
+                ddlXQ,
+            })
             const courseSelections = this.handleCommonTable(html, course_selection_column_map, '#DBGrid');
             return courseSelections;
         }
@@ -232,7 +241,7 @@ module.exports = app => {
             const { ctx } = this;
             const { actions } = ctx.session;
             const rank_exam_url = `${root_url}/${actions['等级考试查询']}`;
-            const html = await this._get(rank_exam_url);
+            const html = await this._post(rank_exam_url);
             const rankExams = this.handleCommonTable(html, rank_exam_column_map, '#Datagrid1,#DataGrid1');
             return rankExams;
         }
@@ -253,7 +262,7 @@ module.exports = app => {
             $ths.children().each((index, th) => {
                 const $this = $(th);
                 entries.forEach(item => {
-                    if(item[1] === $this.text().trim()) {
+                    if (item[1] === $this.text().trim()) {
                         columns.push(item[0]);
                         return false;
                     }
@@ -301,7 +310,7 @@ module.exports = app => {
                     courses.push({
                         text: $td.text().trim(),
                         rowspan: $td.attr('rowspan'),
-                    }); 
+                    });
                 })
                 list.push(courses)
             })
@@ -312,7 +321,7 @@ module.exports = app => {
          * 清理过期的验证码图片
          */
         removeExpiredCheckCode() {
-            const { check_code_save_dir } = app.config.zf; 
+            const { check_code_save_dir } = app.config.zf;
             const filenames = fs.readdirSync(check_code_save_dir);
             filenames.forEach(filename => {
                 let time = '';
@@ -336,7 +345,7 @@ module.exports = app => {
         async _get(url, data = {}, method = 'GET') {
             const { ctx } = this;
             const { ezproxy, sessionId } = ctx.session;
-            const { root_url, action, contentType } = app.config.zf; 
+            const { root_url, action, contentType } = app.config.zf;
             let resData;
             const resp = await app.curl(encodeURI(url), {
                 method,
@@ -352,9 +361,9 @@ module.exports = app => {
                 if (resp.headers['content-type'].split('; ').length > 1) {
                     charset = resp.headers['content-type'].split('; ')[1].split('=')[1];
                 }
-                
+
                 if (charset.toLowerCase() === 'gb2312') {
-                    resData = iconv.decode(resp.data,'GB2312').toString();
+                    resData = iconv.decode(resp.data, 'GB2312').toString();
                 } else {
                     resData = resp.data.toString();
                 }
@@ -378,6 +387,23 @@ module.exports = app => {
          */
         async _post(url, data) {
             return this._get(url, data, 'POST');
+        }
+
+        /**
+         * post请求附带 __VIEWSTATEGENERATOR 和 __VIEWSTATEGENERATOR
+         * @param {String} url 
+         * @param {Object} data 
+         */
+        async _getWithViewState(url, data) {
+            const main = await this._get(url);
+            const $ = cheerio.load(main);
+            const __VIEWSTATEGENERATOR = $("input[name='__VIEWSTATEGENERATOR']").val();
+            const __VIEWSTATE = $("input[name='__VIEWSTATE']").val();
+            const html = await this._post(url, Object.assign({
+                __VIEWSTATE,
+                __VIEWSTATEGENERATOR,
+            }, data));
+            return html;
         }
     }
     return ZfService;
